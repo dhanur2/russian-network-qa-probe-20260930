@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Check recent Russian OpenVPN profiles
         shell: bash
         run: |
@@ -21,7 +24,7 @@ jobs:
           connected=0
           for ip in 77.35.43.113 188.0.217.197 79.105.117.168 212.20.43.5 45.140.95.39; do
             echo "Trying public Russian relay $ip"
-            curl -fsSL --max-time 15 "https://ipspeed.info/ovpn/$ip.ovpn" -o /tmp/relay.ovpn || continue
+            cp "configs/$ip.ovpn" /tmp/relay.ovpn
             if grep -Eiq '^(script-security|up|down|plugin|management|route-up|ipchange|tls-verify)[[:space:]]' /tmp/relay.ovpn; then
               echo 'Config has executable directives; skipping'
               continue
