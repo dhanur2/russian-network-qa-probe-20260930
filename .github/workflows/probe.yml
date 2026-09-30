@@ -37,7 +37,7 @@ jobs:
           for config in /tmp/ru*.ovpn; do
             echo "Trying $config"
             sudo openvpn --config "$config" --auth-user-pass /tmp/vpn-auth --daemon --log /tmp/ovpn.log --writepid /tmp/ovpn.pid || true
-            for attempt in $(seq 1 18); do
+            for attempt in $(seq 1 12); do
               if grep -q 'Initialization Sequence Completed' /tmp/ovpn.log 2>/dev/null; then
                 connected=1
                 break
@@ -48,6 +48,8 @@ jobs:
               sleep 2
             done
             if [ "$connected" -eq 1 ]; then break; fi
+            echo "Failure details for $config:"
+            if [ -f /tmp/ovpn.log ]; then tail -n 25 /tmp/ovpn.log; else echo "No OpenVPN log"; fi
             sudo kill "$(cat /tmp/ovpn.pid)" 2>/dev/null || true
             sudo rm -f /tmp/ovpn.pid /tmp/ovpn.log
           done
