@@ -38,24 +38,24 @@ jobs:
             echo "Trying $config"
             sudo openvpn --config "$config" --auth-user-pass /tmp/vpn-auth --daemon --log /tmp/ovpn.log --writepid /tmp/ovpn.pid || true
             for attempt in $(seq 1 12); do
-              if grep -q 'Initialization Sequence Completed' /tmp/ovpn.log 2>/dev/null; then
+              if sudo grep -q 'Initialization Sequence Completed' /tmp/ovpn.log 2>/dev/null; then
                 connected=1
                 break
               fi
-              if grep -Eq 'AUTH_FAILED|Exiting due to fatal error|Cannot open TUN' /tmp/ovpn.log 2>/dev/null; then
+              if sudo grep -Eq 'AUTH_FAILED|Exiting due to fatal error|Cannot open TUN' /tmp/ovpn.log 2>/dev/null; then
                 break
               fi
               sleep 2
             done
             if [ "$connected" -eq 1 ]; then break; fi
             echo "Failure details for $config:"
-            if [ -f /tmp/ovpn.log ]; then tail -n 25 /tmp/ovpn.log; else echo "No OpenVPN log"; fi
+            if [ -f /tmp/ovpn.log ]; then sudo tail -n 25 /tmp/ovpn.log; else echo "No OpenVPN log"; fi
             sudo kill "$(cat /tmp/ovpn.pid)" 2>/dev/null || true
             sudo rm -f /tmp/ovpn.pid /tmp/ovpn.log
           done
           if [ "$connected" -ne 1 ]; then
             echo 'No relay connected; OpenVPN log tail:'
-            tail -n 35 /tmp/ovpn.log || true
+            sudo tail -n 35 /tmp/ovpn.log || true
             exit 1
           fi
           after=$(curl -fsSL --max-time 15 https://api.ipify.org)
